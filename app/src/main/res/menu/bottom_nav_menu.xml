@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_account"
+        android:icon="@drawable/ic_action_name"
+        android:title="Аккаунт" />
+    <item
+        android:id="@+id/navigation_create_exhibition"
+        android:icon="@drawable/ic_add"
+        android:title="Создать новую выставку" />
+</menu>

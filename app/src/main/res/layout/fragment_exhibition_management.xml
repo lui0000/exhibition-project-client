@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="15dp"
+    tools:context=".ExhibitionManagementFragment"
+    android:background="@color/white">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center_horizontal"
+            android:padding="24dp"
+            android:background="@drawable/border">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:textAlignment="center"
+                android:textStyle="bold"
+                android:textColor="@color/dark_gray"
+                android:text="Create Exhibition"/>
+
+            <!-- Поле для названия выставки -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/exhibition_name"
+                    android:hint="Название выставки"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Поле для описания выставки -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/exhibition_description"
+                    android:hint="Описание выставки"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/border"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Поле для даты выставки -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/exhibition_date"
+                    android:hint="Дата выставки"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="date"
+                    android:background="@drawable/border"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Поле для загрузки изображения -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="16dp">
+
+                <ImageView
+                    android:id="@+id/exhibition_image"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_add"
+                android:contentDescription="Exhibition Image"/>
+
+                <Button
+                    android:id="@+id/btn_upload_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="16dp"
+                    android:text="Загрузить изображение"
+                    android:textColor="@color/dark_gray"
+                    android:backgroundTint="@color/light_grey"/>
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"/>
+
+            <Button
+                android:id="@+id/btn_create_exhibition"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="30dp"
+                app:cornerRadius="10dp"
+                android:textSize="18sp"
+                android:textAlignment="center"
+                android:textStyle="bold"
+                android:backgroundTint="@color/dark_gray"
+                android:textColor="@color/white"
+                android:text="Создать выставку" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>

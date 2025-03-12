@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.exhibitionapp.LoginFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_registrationFragment"
+            app:destination="@id/registrationFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/registrationFragment"
+        android:name="com.example.exhibitionapp.RegistrationFragment"
+        android:label="fragment_registration"
+        tools:layout="@layout/fragment_registration" >
+        <action
+            android:id="@+id/action_registrationFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.exhibitionapp.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_exhibitionsFragment"
+            app:destination="@id/exhibitionsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_accountFragment"
+            app:destination="@id/accountFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_exhibitionManagementFragment"
+            app:destination="@id/exhibitionManagementFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/exhibitionsFragment"
+        android:name="com.example.exhibitionapp.ExhibitionsFragment"
+        android:label="fragment_exhibitions"
+        tools:layout="@layout/fragment_exhibitions" >
+        <action
+            android:id="@+id/action_exhibitionsFragment_to_homeFragment2"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/accountFragment"
+        android:name="com.example.exhibitionapp.AccountFragment"
+        android:label="fragment_account"
+        tools:layout="@layout/fragment_account" >
+        <action
+            android:id="@+id/action_accountFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_accountFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_accountFragment_to_appForArtistsFragment"
+            app:destination="@id/appForArtistsFragment" />
+        <action
+            android:id="@+id/action_accountFragment_to_appForInvestorsFragment2"
+            app:destination="@id/appForInvestorsFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/exhibitionManagementFragment"
+        android:name="com.example.exhibitionapp.ExhibitionManagementFragment"
+        android:label="fragment_exhibition_management"
+        tools:layout="@layout/fragment_exhibition_management" >
+        <action
+            android:id="@+id/action_exhibitionManagementFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/appForArtistsFragment"
+        android:name="com.example.exhibitionapp.AppForArtistsFragment"
+        android:label="fragment_app_for_artists"
+        tools:layout="@layout/fragment_app_for_artists" >
+        <action
+            android:id="@+id/action_appForArtistsFragment_to_accountFragment"
+            app:destination="@id/accountFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/appForInvestorsFragment2"
+        android:name="com.example.exhibitionapp.AppForInvestorsFragment"
+        android:label="fragment_app_for_investors"
+        tools:layout="@layout/fragment_app_for_investors" >
+        <action
+            android:id="@+id/action_appForInvestorsFragment2_to_accountFragment"
+            app:destination="@id/accountFragment" />
+    </fragment>
+</navigation>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="15dp"
+    android:background="@color/white"
+    tools:context=".RegistrationFragment">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="20dp"
+       >
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="600dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/border"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Registration"
+                android:textAlignment="center"
+                android:textColor="@color/dark_gray"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/user_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="full name" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="email" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="password"
+                    android:inputType="textPassword"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_gravity="center_horizontal"/>
+
+            <RadioButton
+                android:id="@+id/org_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Register as a ORGANIZER" />
+
+            <RadioButton
+                android:id="@+id/artist_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Register as ARTIST" />
+
+            <RadioButton
+                android:id="@+id/inv_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Register as INVESTOR" />
+
+            <Button
+                android:id="@+id/btn_register"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="30dp"
+                android:backgroundTint="@color/dark_gray"
+                android:text="registration"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:cornerRadius="10dp" />
+
+            <Button
+                android:id="@+id/btn_login_now"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:backgroundTint="@color/light_grey"
+                android:text="already have an account"
+                android:textAlignment="center"
+                android:textColor="@color/dark_gray"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:cornerRadius="10dp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+
+</LinearLayout>

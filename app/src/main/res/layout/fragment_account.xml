@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <!-- Profile Photo -->
+    <ImageView
+        android:id="@+id/profile_photo"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
+        android:src="@drawable/ic_action_name"/>
+
+    <!-- User Name -->
+    <TextView
+        android:id="@+id/user_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/profile_photo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="Eliza"
+        android:textSize="24sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold" />
+
+    <!-- User Email -->
+    <TextView
+        android:id="@+id/user_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/user_name"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="elbondarenko0@gmail.com@example.com"
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray" />
+
+    <!-- Button: Apply for Exhibition -->
+    <Button
+        android:id="@+id/btn_apply_exhibition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/user_email"
+        android:layout_marginTop="32dp"
+        android:text="Подать заявку"
+        android:textColor="@android:color/white"
+        android:padding="12dp"
+        app:cornerRadius="10dp"
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:backgroundTint="@color/light_grey"/>
+
+    <!-- Button: Invest in Project -->
+    <Button
+        android:id="@+id/btn_invest_project"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btn_apply_exhibition"
+        android:layout_marginTop="16dp"
+        android:text="Инвестировать"
+        android:textColor="@android:color/white"
+        android:padding="12dp"
+        app:cornerRadius="10dp"
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:backgroundTint="@color/light_grey"/>
+
+
+    <!-- Logout Button -->
+    <Button
+        android:id="@+id/logout_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"
+        android:text="logout"
+        android:textColor="@android:color/white"
+        android:padding="12dp"
+        app:cornerRadius="10dp"
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:backgroundTint="@color/dark_gray"/>
+
+</RelativeLayout>

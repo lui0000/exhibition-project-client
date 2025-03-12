@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Блок с фото и заголовком -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="250dp">
+
+            <ImageView
+                android:id="@+id/exhibition_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image2" />
+
+            <TextView
+                android:id="@+id/exhibition_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@android:color/transparent"
+                android:padding="16dp"
+                android:text="Выставка 1"
+                android:textColor="@android:color/white"
+                android:textSize="40sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+        <!-- Карточка с информацией -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="30dp"
+            app:cardCornerRadius="30dp"
+            app:cardElevation="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:padding="24dp"
+                android:background="@drawable/border">
+
+                <!-- Описание выставки -->
+                <TextView
+                    android:id="@+id/exhibition_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:textSize="16sp"
+                    android:text="Государственная Третьяковская галерея представляет первую масштабную ретроспективную выставку Франциско Инфанте-Арана – выдающегося российского художника, одной из ведущих фигур в российском искусстве второй половины XX века." />
+
+                <!-- Список инвесторов -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Инвесторы"
+                    android:textSize="30sp"
+                    android:textStyle="bold"
+                    android:padding="16dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/investorsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingBottom="16dp" />
+
+                <!-- Карусель с основными работами -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Основные работы"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:padding="16dp" />
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/worksViewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:paddingBottom="16dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+</ScrollView>
