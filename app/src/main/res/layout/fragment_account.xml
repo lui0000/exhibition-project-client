@@ -36,16 +36,28 @@
         android:layout_below="@id/user_name"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="8dp"
-        android:text="elbondarenko0@gmail.com@example.com"
+        android:text="elbondarenko0@gmail.com"
         android:textSize="16sp"
         android:textColor="@android:color/darker_gray" />
+
+    <!-- User Role -->
+    <TextView
+        android:id="@+id/user_role"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/user_email"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="Роль: Художник"
+        android:textSize="16sp"
+        android:textColor="@android:color/black" />
 
     <!-- Button: Apply for Exhibition -->
     <Button
         android:id="@+id/btn_apply_exhibition"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/user_email"
+        android:layout_below="@id/user_role"
         android:layout_marginTop="32dp"
         android:text="Подать заявку"
         android:textColor="@android:color/white"
@@ -69,7 +81,6 @@
         android:textSize="18sp"
         android:textAlignment="center"
         android:backgroundTint="@color/light_grey"/>
-
 
     <!-- Logout Button -->
     <Button
