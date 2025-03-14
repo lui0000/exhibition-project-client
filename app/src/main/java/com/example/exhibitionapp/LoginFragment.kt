@@ -16,6 +16,8 @@ import com.example.exhibitionapp.dataclass.LoginRequest
 import com.example.exhibitionapp.services.AuthService
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import java.util.Base64
+import org.json.JSONObject
 
 class LoginFragment : Fragment() {
 
@@ -67,8 +69,9 @@ class LoginFragment : Fragment() {
                 if (response.isSuccessful) {
                     val token = response.body()?.jwtToken
                     token?.let {
-                        saveToken(it)
-                        Log.d("LoginUser", "Login successful! Token saved.")
+                        saveToken(it) // Сохраняем токен
+                        saveUserIdFromToken(it) // Сохраняем userId из токена
+                        Log.d("LoginUser", "Login successful! Token and userId saved.")
                         Toast.makeText(requireContext(), "Login successful!", Toast.LENGTH_SHORT)
                             .show()
                         findNavController().navigate(R.id.action_loginFragment_to_homeFragment)
@@ -88,8 +91,28 @@ class LoginFragment : Fragment() {
 
     private fun saveToken(token: String) {
         val sharedPreferences =
-            requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putString("jwt_token", token).apply()
+            requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("jwtToken", token).apply()
         Log.d("SaveToken", "Token saved to SharedPreferences")
+    }
+
+    private fun saveUserIdFromToken(token: String) {
+        try {
+            val parts = token.split(".")
+            if (parts.size != 3) {
+                throw IllegalArgumentException("Invalid JWT token")
+            }
+
+            val payload = String(Base64.getUrlDecoder().decode(parts[1]))
+            val jsonObject = JSONObject(payload)
+            val userId = jsonObject.getInt("user_id") // Или "userId", в зависимости от payload
+
+            val sharedPreferences =
+                requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+            sharedPreferences.edit().putInt("userId", userId).apply()
+            Log.d("SaveUserId", "User ID saved: $userId")
+        } catch (e: Exception) {
+            Log.e("SaveUserId", "Error decoding JWT token", e)
+        }
     }
 }

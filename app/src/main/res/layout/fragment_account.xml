@@ -23,7 +23,6 @@
         android:layout_below="@id/profile_photo"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
-        android:text="Eliza"
         android:textSize="24sp"
         android:textColor="@android:color/black"
         android:textStyle="bold" />
@@ -36,7 +35,6 @@
         android:layout_below="@id/user_name"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="8dp"
-        android:text="elbondarenko0@gmail.com"
         android:textSize="16sp"
         android:textColor="@android:color/darker_gray" />
 
@@ -48,7 +46,6 @@
         android:layout_below="@id/user_email"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="8dp"
-        android:text="Роль: Художник"
         android:textSize="16sp"
         android:textColor="@android:color/black" />
 

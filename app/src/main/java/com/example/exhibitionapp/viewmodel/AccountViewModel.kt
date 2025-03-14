@@ -1,5 +1,6 @@
 package com.example.exhibitionapp.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -18,10 +19,12 @@ class AccountViewModel : ViewModel() {
     fun loadUser(token: String, userId: Int) {
         viewModelScope.launch {
             try {
+                Log.d("AccountViewModel", "Fetching user info for userId: $userId")
                 val userResponse = userService.getUserInfo("Bearer $token", userId)
+                Log.d("AccountViewModel", "User response received: $userResponse")
                 _user.postValue(userResponse)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("AccountViewModel", "Error loading user", e)
                 _user.postValue(null)
             }
         }
