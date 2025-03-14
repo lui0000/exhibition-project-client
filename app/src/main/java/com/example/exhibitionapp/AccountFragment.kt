@@ -57,6 +57,23 @@ class AccountFragment : Fragment() {
                 binding.userName.text = user.name
                 binding.userEmail.text = user.email
                 binding.userRole.text = "Роль: ${user.role}"
+
+                // Управление видимостью кнопок в зависимости от роли
+                when (user.role) {
+                    "ARTIST" -> {
+                        binding.btnApplyExhibition.visibility = View.VISIBLE
+                        binding.btnInvestProject.visibility = View.GONE
+                    }
+                    "INVESTOR" -> {
+                        binding.btnApplyExhibition.visibility = View.GONE
+                        binding.btnInvestProject.visibility = View.VISIBLE
+                    }
+                    else -> {
+                        // Для организатора и других ролей скрываем обе кнопки
+                        binding.btnApplyExhibition.visibility = View.GONE
+                        binding.btnInvestProject.visibility = View.GONE
+                    }
+                }
             } else {
                 Log.e("AccountFragment", "User data is null")
                 Toast.makeText(requireContext(), "Failed to load user data", Toast.LENGTH_SHORT).show()
