@@ -35,7 +35,7 @@ class AccountFragment : Fragment() {
 
         viewModel = ViewModelProvider(this)[AccountViewModel::class.java]
         sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        val token = sharedPreferences.getString("jwt_token", null)
+        val token = sharedPreferences.getString("jwtToken", null)
 
         if (token != null) {
             val userId = sharedPreferences.getInt("userId", -1)
@@ -80,6 +80,31 @@ class AccountFragment : Fragment() {
                 Toast.makeText(requireContext(), "Navigation error", Toast.LENGTH_SHORT).show()
             }
         }
+
+        // Обработчик для кнопки выхода
+        binding.logoutButton.setOnClickListener {
+            logout()
+        }
+    }
+
+    private fun logout() {
+        // Очищаем SharedPreferences
+        sharedPreferences.edit().apply {
+            remove("jwtToken")
+            remove("userId")
+            apply()
+        }
+
+        // Перенаправляем на экран логина
+        try {
+            findNavController().navigate(R.id.action_accountFragment_to_loginFragment)
+        } catch (e: Exception) {
+            Log.e("AccountFragment", "Navigation error: ${e.message}")
+            Toast.makeText(requireContext(), "Navigation error", Toast.LENGTH_SHORT).show()
+        }
+
+        // Уведомляем пользователя
+        Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
