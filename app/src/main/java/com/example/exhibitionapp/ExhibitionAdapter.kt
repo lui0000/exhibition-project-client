@@ -1,15 +1,20 @@
 package com.example.exhibitionapp
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
+import kotlinx.coroutines.CoroutineStart
 
 class ExhibitionAdapter(
-    private val exhibitions: List<Exhibition>,
-    private val onItemClick: (Exhibition) -> Unit // Добавьте лямбда-функцию для обработки кликов
+    private val exhibitions: List<ExhibitionWithPaintingResponse>,
+    private val onItemClick: (ExhibitionWithPaintingResponse) -> Unit
 ) : RecyclerView.Adapter<ExhibitionAdapter.ExhibitionViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExhibitionViewHolder {
@@ -31,10 +36,21 @@ class ExhibitionAdapter(
         private val description: TextView = itemView.findViewById(R.id.exhibition_description)
         private val image: ImageView = itemView.findViewById(R.id.exhibition_image)
 
-        fun bind(exhibition: Exhibition) {
+        fun bind(exhibition: ExhibitionWithPaintingResponse) {
             title.text = exhibition.title
             description.text = exhibition.description
-            image.setImageResource(exhibition.imageResId)
+
+            // Если photoData не пустое, загружаем изображение по URL
+            if (!exhibition.photoData.isNullOrEmpty()) {
+                // Используем Glide или другую библиотеку для загрузки изображений по URL
+                Glide.with(itemView.context)
+                    .load(exhibition.photoData) // Загружаем картинку по URL
+                    .placeholder(R.drawable.placeholder_image) // Заменить на свою иконку
+                    .into(image)
+            } else {
+                image.setImageResource(R.drawable.placeholder_image) // Вставляем плейсхолдер, если URL пустой
+            }
         }
     }
 }
+
