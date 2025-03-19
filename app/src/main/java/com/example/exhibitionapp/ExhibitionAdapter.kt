@@ -40,15 +40,13 @@ class ExhibitionAdapter(
             title.text = exhibition.title
             description.text = exhibition.description
 
-            // Если photoData не пустое, загружаем изображение по URL
             if (!exhibition.photoData.isNullOrEmpty()) {
-                // Используем Glide или другую библиотеку для загрузки изображений по URL
-                Glide.with(itemView.context)
-                    .load(exhibition.photoData) // Загружаем картинку по URL
-                    .placeholder(R.drawable.placeholder_image) // Заменить на свою иконку
+                Glide.with(image.context)
+                    .load(exhibition.photoData)
+                    .placeholder(R.drawable.placeholder_image)
                     .into(image)
             } else {
-                image.setImageResource(R.drawable.placeholder_image) // Вставляем плейсхолдер, если URL пустой
+                image.setImageResource(R.drawable.placeholder_image)
             }
         }
     }

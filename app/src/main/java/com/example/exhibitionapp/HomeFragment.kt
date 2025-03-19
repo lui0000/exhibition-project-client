@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.exhibitionapp.databinding.FragmentHomeBinding
 import com.example.exhibitionapp.services.ExhibitionService
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -37,7 +38,8 @@ class HomeFragment : Fragment() {
 
         loadExhibitions()
 
-        binding.bottomNavigationView.setOnNavigationItemSelectedListener { item ->
+        // Настраиваем BottomNavigationView
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_account -> {
                     findNavController().navigate(R.id.action_homeFragment_to_accountFragment)
@@ -50,43 +52,51 @@ class HomeFragment : Fragment() {
                 else -> false
             }
         }
+
+        // Скрываем кнопку создания выставки, если пользователь не "ORGANIZER"
+        val bottomNavigationView = view.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        bottomNavigationView.menu.findItem(R.id.navigation_create_exhibition).isVisible =
+            getUserRoleFromSharedPreferences() == "ORGANIZER"
     }
 
+    private fun getUserRoleFromSharedPreferences(): String {
+        val sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val role = sharedPreferences.getString("userRole", "") ?: ""
+        Log.d("HomeFragment", "Загружена роль пользователя: $role")
+        return role
+    }
+
+
     private fun getTokenFromSharedPreferences(): String {
-        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("jwtToken", "") ?: ""
+        val sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("jwtToken", null) ?: ""
     }
 
     private fun loadExhibitions() {
         lifecycleScope.launch {
             try {
-                val token = "Bearer ${getTokenFromSharedPreferences()}"
-                Log.d("HomeFragment", "Запрос на получение выставок отправлен. Токен: $token")
+                val token = getTokenFromSharedPreferences()
+                if (token.isEmpty()) {
+                    Log.e("HomeFragment", "Токен отсутствует!")
+                    Toast.makeText(context, "Ошибка: Токен не найден", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
 
-                val response = exhibitionService.getExhibitions(token)
-
-                Log.d("HomeFragment", "Ответ получен. Успех: ${response.isSuccessful}")
-                Log.d("HomeFragment", "Код статуса: ${response.code()}")
-                Log.d("HomeFragment", "Тело ответа: ${response.body()}")
+                val response = exhibitionService.getExhibitions("Bearer $token")
 
                 if (response.isSuccessful) {
-                    val exhibitions = response.body() ?: emptyList()
-                    Log.d("HomeFragment", "Получено ${exhibitions.size} выставок")
-
-                    val adapter = ExhibitionAdapter(exhibitions) { exhibition ->
-                        val bundle = Bundle().apply {
-                            putParcelable("exhibition", exhibition)
+                    val exhibitions = response.body()
+                    binding.recyclerView.adapter = exhibitions?.let {
+                        ExhibitionAdapter(it) { exhibition ->
+                            val bundle = Bundle().apply {
+                                putParcelable("exhibition", exhibition)
+                            }
+                            findNavController().navigate(R.id.action_homeFragment_to_exhibitionsFragment, bundle)
                         }
-                        findNavController().navigate(R.id.action_homeFragment_to_exhibitionsFragment, bundle)
                     }
-                    binding.recyclerView.adapter = adapter
-
                 } else {
                     Log.e("HomeFragment", "Ошибка загрузки: ${response.message()}")
-                    response.errorBody()?.let { errorBody ->
-                        Log.e("HomeFragment", "Тело ошибки: ${errorBody.string()}")
-                    }
-                    Toast.makeText(context, "Ошибка загрузки выставок", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Ошибка загрузки: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Log.e("HomeFragment", "Ошибка сети: ${e.message}", e)
@@ -100,3 +110,4 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 }
+

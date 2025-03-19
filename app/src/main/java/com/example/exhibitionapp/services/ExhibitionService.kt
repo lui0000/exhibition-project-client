@@ -16,9 +16,8 @@ interface ExhibitionService {
     suspend fun getExhibitions(@Header("Authorization") token: String): Response<List<ExhibitionWithPaintingResponse>>
 
     @GET("exhibition/{id}")
-    suspend fun getExhibition(): Response<ExhibitionResponse>
+    suspend fun getExhibition(@Path("id") id: Int): Response<ExhibitionResponse>
 
     @POST("exhibition/add")
     suspend fun createExhibition(@Body request: ExhibitionRequest): Response<ExhibitionResponse>
-
 }

@@ -6,8 +6,9 @@ import android.os.Parcelable
 data class ExhibitionWithPaintingResponse(
     val title: String,
     val description: String,
-    val photoData: String?  // Сохраняем URL картинки
-) : Parcelable {
+    val photoData: String?  // URL изображения (может быть null)
+) : Parcelable
+ {
     constructor(parcel: Parcel) : this(
         parcel.readString().toString(),
         parcel.readString().toString(),
