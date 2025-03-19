@@ -21,6 +21,19 @@
             android:textStyle="bold"
             android:padding="16dp" />
 
+
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/searchView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            android:queryHint="Поиск по названию выставки"
+            app:closeIcon="@drawable/ic_clear"
+            app:iconifiedByDefault="false"
+            app:queryBackground="@android:color/transparent"
+            app:searchHintIcon="@null" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"

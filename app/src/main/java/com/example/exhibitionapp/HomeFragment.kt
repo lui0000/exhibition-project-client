@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.exhibitionapp.databinding.FragmentHomeBinding
 import com.example.exhibitionapp.services.ExhibitionService
 import com.example.exhibitionapp.viewmodel.HomeViewModel
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.appcompat.widget.SearchView
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -40,14 +40,16 @@ class HomeFragment : Fragment() {
 
         sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         exhibitionService = RetrofitClient.createService(ExhibitionService::class.java)
-        viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+
+        // Инициализация ViewModel с SavedStateHandle
+        viewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
 
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Загружаем выставки (эта функция остается без изменений)
+        // Загружаем выставки
         loadExhibitions()
 
-        // Настраиваем BottomNavigationView (эта часть остается без изменений)
+        // Настраиваем BottomNavigationView
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_account -> {
@@ -60,6 +62,14 @@ class HomeFragment : Fragment() {
                 }
                 else -> false
             }
+        }
+
+        // Настройка SearchView
+        setupSearchView()
+
+        // Восстановление текста поискового запроса
+        viewModel.searchQuery.observe(viewLifecycleOwner) { query ->
+            binding.searchView.setQuery(query, false)
         }
 
         // Загружаем данные пользователя для определения роли
@@ -84,6 +94,48 @@ class HomeFragment : Fragment() {
                 Toast.makeText(requireContext(), "Failed to load user data", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun setupSearchView() {
+        val searchView = binding.searchView
+
+        // 1. Подсказка в пустом поле
+        searchView.queryHint = "Поиск по названию выставки"
+
+        // 2. Показ клавиатуры при нажатии на поле ввода
+        searchView.isIconified = false
+        searchView.requestFocus()
+
+        // 3. Отображение кнопки "Очистить" при вводе текста
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                // Выполняем поиск при нажатии Enter
+                query?.let { performSearch(it) }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                // Сохраняем текст поискового запроса в ViewModel
+                newText?.let { viewModel.setSearchQuery(it) }
+                // Показываем/скрываем кнопку "Очистить" в зависимости от наличия текста
+                searchView.isSubmitButtonEnabled = newText?.isNotEmpty() == true
+                return true
+            }
+        })
+
+        // 4. Очистка текста и скрытие клавиатуры при нажатии на кнопку "Очистить"
+        searchView.setOnCloseListener {
+            searchView.setQuery("", false) // Очищаем текст
+            searchView.clearFocus() // Скрываем клавиатуру
+            viewModel.setSearchQuery("") // Очищаем текст в ViewModel
+            true
+        }
+    }
+
+    private fun performSearch(query: String) {
+        // Здесь можно добавить логику для поиска по названию выставки
+        Log.d("HomeFragment", "Выполняем поиск по запросу: $query")
+        // Например, фильтрация списка выставок или запрос к API
     }
 
     // Остальные функции (loadExhibitions, getTokenFromSharedPreferences и т.д.) остаются без изменений
@@ -129,4 +181,3 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 }
-
