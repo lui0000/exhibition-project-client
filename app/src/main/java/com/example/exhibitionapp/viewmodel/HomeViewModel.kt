@@ -13,13 +13,26 @@ import com.example.exhibitionapp.dataclass.UserResponse
 import com.example.exhibitionapp.services.UserService
 import kotlinx.coroutines.launch
 
-class HomeViewModel (private val savedStateHandle: SavedStateHandle) : ViewModel() {
+class HomeViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
     private val _user = MutableLiveData<UserResponse?>()
     val user: LiveData<UserResponse?> = _user
 
     private val userService: UserService = RetrofitClient.createService(UserService::class.java)
 
+    // Ключ для сохранения текста поискового запроса
+    private val SEARCH_QUERY_KEY = "search_query"
+
+    // LiveData для текста поискового запроса
+    val searchQuery: LiveData<String>
+        get() = savedStateHandle.getLiveData(SEARCH_QUERY_KEY)
+
+    // Метод для обновления текста поискового запроса
+    fun setSearchQuery(query: String) {
+        savedStateHandle[SEARCH_QUERY_KEY] = query
+    }
+
+    // Загрузка данных пользователя
     fun loadUser(token: String, userId: Int) {
         viewModelScope.launch {
             try {
@@ -32,18 +45,5 @@ class HomeViewModel (private val savedStateHandle: SavedStateHandle) : ViewModel
                 _user.postValue(null)
             }
         }
-    }
-
-
-    // Ключ для сохранения текста поискового запроса
-    private val SEARCH_QUERY_KEY = "search_query"
-
-    // LiveData для текста поискового запроса
-    val searchQuery: LiveData<String>
-        get() = savedStateHandle.getLiveData(SEARCH_QUERY_KEY)
-
-    // Метод для обновления текста поискового запроса
-    fun setSearchQuery(query: String) {
-        savedStateHandle[SEARCH_QUERY_KEY] = query
     }
 }

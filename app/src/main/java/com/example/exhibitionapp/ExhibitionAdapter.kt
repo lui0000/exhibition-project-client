@@ -13,7 +13,7 @@ import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import kotlinx.coroutines.CoroutineStart
 
 class ExhibitionAdapter(
-    private val exhibitions: List<ExhibitionWithPaintingResponse>,
+    private var exhibitions: List<ExhibitionWithPaintingResponse>, // Измените на var
     private val onItemClick: (ExhibitionWithPaintingResponse) -> Unit
 ) : RecyclerView.Adapter<ExhibitionAdapter.ExhibitionViewHolder>() {
 
@@ -30,6 +30,12 @@ class ExhibitionAdapter(
     }
 
     override fun getItemCount(): Int = exhibitions.size
+
+    // Добавляем метод для обновления данных
+    fun updateData(newExhibitions: List<ExhibitionWithPaintingResponse>) {
+        exhibitions = newExhibitions // Обновляем список
+        notifyDataSetChanged() // Уведомляем RecyclerView об изменениях
+    }
 
     class ExhibitionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val title: TextView = itemView.findViewById(R.id.exhibition_title)

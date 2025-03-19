@@ -17,6 +17,7 @@ import com.example.exhibitionapp.databinding.FragmentHomeBinding
 import com.example.exhibitionapp.services.ExhibitionService
 import com.example.exhibitionapp.viewmodel.HomeViewModel
 import androidx.appcompat.widget.SearchView
+import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -26,6 +27,8 @@ class HomeFragment : Fragment() {
     private lateinit var exhibitionService: ExhibitionService
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var viewModel: HomeViewModel
+    private lateinit var adapter: ExhibitionAdapter
+    private var allExhibitions: List<ExhibitionWithPaintingResponse> = emptyList() // Полный список выставок
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,11 +43,18 @@ class HomeFragment : Fragment() {
 
         sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         exhibitionService = RetrofitClient.createService(ExhibitionService::class.java)
-
-        // Инициализация ViewModel с SavedStateHandle
         viewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
 
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
+
+        // Инициализация адаптера
+        adapter = ExhibitionAdapter(emptyList()) { exhibition ->
+            val bundle = Bundle().apply {
+                putParcelable("exhibition", exhibition)
+            }
+            findNavController().navigate(R.id.action_homeFragment_to_exhibitionsFragment, bundle)
+        }
+        binding.recyclerView.adapter = adapter
 
         // Загружаем выставки
         loadExhibitions()
@@ -70,6 +80,7 @@ class HomeFragment : Fragment() {
         // Восстановление текста поискового запроса
         viewModel.searchQuery.observe(viewLifecycleOwner) { query ->
             binding.searchView.setQuery(query, false)
+            filterExhibitions(query) // Фильтруем список при восстановлении текста
         }
 
         // Загружаем данные пользователя для определения роли
@@ -110,15 +121,14 @@ class HomeFragment : Fragment() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 // Выполняем поиск при нажатии Enter
-                query?.let { performSearch(it) }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 // Сохраняем текст поискового запроса в ViewModel
                 newText?.let { viewModel.setSearchQuery(it) }
-                // Показываем/скрываем кнопку "Очистить" в зависимости от наличия текста
-                searchView.isSubmitButtonEnabled = newText?.isNotEmpty() == true
+                // Фильтруем список выставок
+                filterExhibitions(newText)
                 return true
             }
         })
@@ -128,17 +138,23 @@ class HomeFragment : Fragment() {
             searchView.setQuery("", false) // Очищаем текст
             searchView.clearFocus() // Скрываем клавиатуру
             viewModel.setSearchQuery("") // Очищаем текст в ViewModel
+            filterExhibitions("") // Показываем полный список
             true
         }
     }
 
-    private fun performSearch(query: String) {
-        // Здесь можно добавить логику для поиска по названию выставки
-        Log.d("HomeFragment", "Выполняем поиск по запросу: $query")
-        // Например, фильтрация списка выставок или запрос к API
+    private fun filterExhibitions(query: String?) {
+        val filteredExhibitions = if (query.isNullOrEmpty()) {
+            allExhibitions // Если запрос пустой, показываем все выставки
+        } else {
+            // Фильтруем по названию выставки
+            allExhibitions.filter { exhibition ->
+                exhibition.title.contains(query, ignoreCase = true)
+            }
+        }
+        adapter.updateData(filteredExhibitions) // Обновляем адаптер
     }
 
-    // Остальные функции (loadExhibitions, getTokenFromSharedPreferences и т.д.) остаются без изменений
     private fun loadExhibitions() {
         lifecycleScope.launch {
             try {
@@ -153,13 +169,9 @@ class HomeFragment : Fragment() {
 
                 if (response.isSuccessful) {
                     val exhibitions = response.body()
-                    binding.recyclerView.adapter = exhibitions?.let {
-                        ExhibitionAdapter(it) { exhibition ->
-                            val bundle = Bundle().apply {
-                                putParcelable("exhibition", exhibition)
-                            }
-                            findNavController().navigate(R.id.action_homeFragment_to_exhibitionsFragment, bundle)
-                        }
+                    if (exhibitions != null) {
+                        allExhibitions = exhibitions // Сохраняем полный список выставок
+                        adapter.updateData(exhibitions) // Обновляем адаптер
                     }
                 } else {
                     Log.e("HomeFragment", "Ошибка загрузки: ${response.message()}")
