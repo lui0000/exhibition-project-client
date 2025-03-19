@@ -28,7 +28,8 @@ class HomeFragment : Fragment() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var viewModel: HomeViewModel
     private lateinit var adapter: ExhibitionAdapter
-    private var allExhibitions: List<ExhibitionWithPaintingResponse> = emptyList() // Полный список выставок
+    private var allExhibitions: List<ExhibitionWithPaintingResponse> = emptyList()
+    private var lastSearchQuery: String? = null // Переменная для хранения последнего запроса
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -83,6 +84,20 @@ class HomeFragment : Fragment() {
             filterExhibitions(query) // Фильтруем список при восстановлении текста
         }
 
+        // Обработка нажатия на кнопку "Обновить" в плейсхолдере с ошибкой
+        binding.retryButton.setOnClickListener {
+            lastSearchQuery?.let { query ->
+                filterExhibitions(query) // Повторно отправляем последний запрос
+            }
+        }
+
+        // Обработка нажатия на кнопку "Обновить" в плейсхолдере для пустого результата
+        binding.retrySearchButton.setOnClickListener {
+            lastSearchQuery?.let { query ->
+                filterExhibitions(query) // Повторно отправляем последний запрос
+            }
+        }
+
         // Загружаем данные пользователя для определения роли
         val token = sharedPreferences.getString("jwtToken", null)
         val userId = sharedPreferences.getInt("userId", -1)
@@ -120,14 +135,11 @@ class HomeFragment : Fragment() {
         // 3. Отображение кнопки "Очистить" при вводе текста
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                // Выполняем поиск при нажатии Enter
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Сохраняем текст поискового запроса в ViewModel
                 newText?.let { viewModel.setSearchQuery(it) }
-                // Фильтруем список выставок
                 filterExhibitions(newText)
                 return true
             }
@@ -135,24 +147,32 @@ class HomeFragment : Fragment() {
 
         // 4. Очистка текста и скрытие клавиатуры при нажатии на кнопку "Очистить"
         searchView.setOnCloseListener {
-            searchView.setQuery("", false) // Очищаем текст
-            searchView.clearFocus() // Скрываем клавиатуру
-            viewModel.setSearchQuery("") // Очищаем текст в ViewModel
-            filterExhibitions("") // Показываем полный список
+            searchView.setQuery("", false)
+            searchView.clearFocus()
+            viewModel.setSearchQuery("")
+            filterExhibitions("")
             true
         }
     }
 
     private fun filterExhibitions(query: String?) {
+        lastSearchQuery = query // Сохраняем последний запрос
         val filteredExhibitions = if (query.isNullOrEmpty()) {
-            allExhibitions // Если запрос пустой, показываем все выставки
+            allExhibitions
         } else {
-            // Фильтруем по названию выставки
             allExhibitions.filter { exhibition ->
                 exhibition.title.contains(query, ignoreCase = true)
             }
         }
-        adapter.updateData(filteredExhibitions) // Обновляем адаптер
+
+        if (filteredExhibitions.isEmpty()) {
+            // Показываем плейсхолдер с кнопкой "Обновить", если нет результатов
+            showNoResultsPlaceholder()
+        } else {
+            // Скрываем плейсхолдер и показываем список
+            hidePlaceholders()
+            adapter.updateData(filteredExhibitions)
+        }
     }
 
     private fun loadExhibitions() {
@@ -170,18 +190,41 @@ class HomeFragment : Fragment() {
                 if (response.isSuccessful) {
                     val exhibitions = response.body()
                     if (exhibitions != null) {
-                        allExhibitions = exhibitions // Сохраняем полный список выставок
-                        adapter.updateData(exhibitions) // Обновляем адаптер
+                        allExhibitions = exhibitions
+                        adapter.updateData(exhibitions)
+                        hidePlaceholders() // Скрываем плейсхолдеры, если данные загружены
                     }
                 } else {
+                    // Показываем плейсхолдер с ошибкой
+                    showErrorPlaceholder()
                     Log.e("HomeFragment", "Ошибка загрузки: ${response.message()}")
                     Toast.makeText(context, "Ошибка загрузки: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
+                // Показываем плейсхолдер с ошибкой
+                showErrorPlaceholder()
                 Log.e("HomeFragment", "Ошибка сети: ${e.message}", e)
                 Toast.makeText(context, "Ошибка сети: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showNoResultsPlaceholder() {
+        binding.noResultsPlaceholder.visibility = View.VISIBLE
+        binding.errorPlaceholder.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+    }
+
+    private fun showErrorPlaceholder() {
+        binding.errorPlaceholder.visibility = View.VISIBLE
+        binding.noResultsPlaceholder.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+    }
+
+    private fun hidePlaceholders() {
+        binding.noResultsPlaceholder.visibility = View.GONE
+        binding.errorPlaceholder.visibility = View.GONE
+        binding.recyclerView.visibility = View.VISIBLE
     }
 
     private fun getTokenFromSharedPreferences(): String {

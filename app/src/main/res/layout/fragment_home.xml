@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,7 +20,6 @@
             android:textStyle="bold"
             android:padding="16dp" />
 
-
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
@@ -29,10 +27,64 @@
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="16dp"
             android:queryHint="Поиск по названию выставки"
-            app:closeIcon="@drawable/ic_clear"
             app:iconifiedByDefault="false"
             app:queryBackground="@android:color/transparent"
-            app:searchHintIcon="@null" />
+            app:searchHintIcon="@null"
+            app:closeIcon="@drawable/ic_clear" />
+
+        <!-- Плейсхолдер для отсутствия результатов -->
+        <!-- Плейсхолдер для отсутствия результатов -->
+        <LinearLayout
+            android:id="@+id/noResultsPlaceholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ничего не найдено"
+                android:textSize="18sp"
+                android:textColor="@color/black" />
+
+            <!-- Кнопка "Обновить" -->
+            <Button
+                android:id="@+id/retrySearchButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Обновить"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/light_grey"
+                android:textColor="@color/dark_gray" />
+        </LinearLayout>
+
+        <!-- Плейсхолдер для ошибки с кнопкой "Обновить" -->
+        <LinearLayout
+            android:id="@+id/errorPlaceholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Произошла ошибка"
+                android:textSize="18sp"
+                android:textColor="@color/black" />
+
+            <Button
+                android:id="@+id/retryButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Обновить"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/light_grey"
+                android:textColor="@color/dark_gray" />
+        </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
