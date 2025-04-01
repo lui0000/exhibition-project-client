@@ -5,25 +5,24 @@ import android.content.SharedPreferences
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.appcompat.widget.SearchView
-import androidx.cursoradapter.widget.CursorAdapter
-import androidx.cursoradapter.widget.SimpleCursorAdapter
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.exhibitionapp.databinding.FragmentHomeBinding
-import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import com.example.exhibitionapp.services.ExhibitionService
 import com.example.exhibitionapp.viewmodel.HomeViewModel
+import androidx.appcompat.widget.SearchView
+import androidx.cursoradapter.widget.CursorAdapter
+import androidx.cursoradapter.widget.SimpleCursorAdapter
+import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -41,17 +40,11 @@ class HomeFragment : Fragment() {
 
     private val HISTORY_KEY = "search_history"
     private val MAX_HISTORY_ITEMS = 10
-    private val handler = Handler(Looper.getMainLooper())
-    private val searchRunnable = Runnable {
-        lastSearchQuery?.let { query ->
-            viewModel.setSearchQuery(query)
-            performSearch(query)
-        }
-    }
+
+
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -68,6 +61,7 @@ class HomeFragment : Fragment() {
 
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
 
+        // Инициализация адаптера для выставок
         adapter = ExhibitionAdapter(emptyList()) { exhibition ->
             addToSearchHistory(exhibition.title)
             val bundle = Bundle().apply {
@@ -77,10 +71,13 @@ class HomeFragment : Fragment() {
         }
         binding.recyclerView.adapter = adapter
 
+        // Инициализация адаптера для подсказок поиска
         setupSearchSuggestionsAdapter()
 
+        // Загружаем выставки
         loadExhibitions()
 
+        // Настройка BottomNavigationView
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_account -> {
@@ -95,25 +92,29 @@ class HomeFragment : Fragment() {
             }
         }
 
+        // Настройка SearchView
         setupSearchView()
 
+        // Восстановление текста поискового запроса
         viewModel.searchQuery.observe(viewLifecycleOwner) { query ->
             binding.searchView.setQuery(query, false)
             filterExhibitions(query)
         }
 
+        // Обработка кнопок
         binding.retryButton.setOnClickListener {
-            lastSearchQuery?.let { query -> performSearch(query) }
+            lastSearchQuery?.let { query -> filterExhibitions(query) }
         }
 
         binding.retrySearchButton.setOnClickListener {
-            lastSearchQuery?.let { query -> performSearch(query) }
+            lastSearchQuery?.let { query -> filterExhibitions(query) }
         }
 
         binding.clearHistoryButton.setOnClickListener {
             clearSearchHistory()
         }
 
+        // Загрузка данных пользователя
         val token = sharedPreferences.getString("jwtToken", null)
         val userId = sharedPreferences.getInt("userId", -1)
 
@@ -230,7 +231,7 @@ class HomeFragment : Fragment() {
                 query?.let {
                     addToSearchHistory(it)
                     viewModel.setSearchQuery(it)
-                    performSearch(it)
+                    filterExhibitions(it)
                 }
                 return true
             }
@@ -253,24 +254,18 @@ class HomeFragment : Fragment() {
 
     private fun filterExhibitions(query: String?) {
         lastSearchQuery = query
-        handler.removeCallbacks(searchRunnable)
-
-        when {
-            query.isNullOrEmpty() -> {
-                adapter.updateData(allExhibitions)
-                hidePlaceholders()
-            }
-            else -> handler.postDelayed(searchRunnable, 2000)
+        val filteredExhibitions = if (query.isNullOrEmpty()) {
+            allExhibitions
+        } else {
+            allExhibitions.filter { it.title.contains(query, ignoreCase = true) }
         }
-    }
 
-    private fun performSearch(query: String) {
-        val filtered = allExhibitions.filter {
-            it.title.contains(query, ignoreCase = true)
+        if (filteredExhibitions.isEmpty()) {
+            showNoResultsPlaceholder()
+        } else {
+            hidePlaceholders()
+            adapter.updateData(filteredExhibitions)
         }
-        adapter.updateData(filtered)
-        if (filtered.isEmpty()) showNoResultsPlaceholder()
-        else hidePlaceholders()
     }
 
     private fun loadExhibitions() {
@@ -328,8 +323,7 @@ class HomeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        handler.removeCallbacks(searchRunnable)
-        _binding = null
         super.onDestroyView()
+        _binding = null
     }
 }
