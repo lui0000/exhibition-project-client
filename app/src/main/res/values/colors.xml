@@ -6,4 +6,10 @@
     <color name="dark_gray">#747474</color>
     <color name="light_grey">#D9D9D9</color>
 
+
+    <color name="background_light">#FFFFFF</color>
+    <color name="background_dark">#1c1c1c</color>
+
+
+
 </resources>

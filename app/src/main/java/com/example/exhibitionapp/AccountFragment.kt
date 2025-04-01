@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.exhibitionapp.databinding.FragmentAccountBinding
 import com.example.exhibitionapp.viewmodel.AccountViewModel
+import androidx.appcompat.app.AppCompatDelegate
+
 
 class AccountFragment : Fragment() {
 
@@ -101,6 +103,26 @@ class AccountFragment : Fragment() {
         // Обработчик для кнопки выхода
         binding.logoutButton.setOnClickListener {
             logout()
+        }
+
+
+        // Настройка переключателя темной темы
+        val themeSwitch = binding.themeSwitch
+        val settingsPrefs = requireContext().getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
+        val isDarkMode = settingsPrefs.getBoolean("dark_mode", false)
+
+        themeSwitch.isChecked = isDarkMode
+
+        themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val mode = if (isChecked) {
+                AppCompatDelegate.MODE_NIGHT_YES
+            } else {
+                AppCompatDelegate.MODE_NIGHT_NO
+            }
+            AppCompatDelegate.setDefaultNightMode(mode)
+
+            // Сохраняем состояние темы
+            settingsPrefs.edit().putBoolean("dark_mode", isChecked).apply()
         }
     }
 
