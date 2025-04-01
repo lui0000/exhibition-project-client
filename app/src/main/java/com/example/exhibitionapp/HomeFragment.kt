@@ -2,22 +2,28 @@ package com.example.exhibitionapp
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.database.Cursor
+import android.database.MatrixCursor
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.widget.SearchView
+import androidx.cursoradapter.widget.CursorAdapter
+import androidx.cursoradapter.widget.SimpleCursorAdapter
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.exhibitionapp.databinding.FragmentHomeBinding
+import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import com.example.exhibitionapp.services.ExhibitionService
 import com.example.exhibitionapp.viewmodel.HomeViewModel
-import androidx.appcompat.widget.SearchView
-import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -26,13 +32,26 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var exhibitionService: ExhibitionService
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var searchHistoryPreferences: SharedPreferences
     private lateinit var viewModel: HomeViewModel
     private lateinit var adapter: ExhibitionAdapter
+    private lateinit var suggestionsAdapter: SimpleCursorAdapter
     private var allExhibitions: List<ExhibitionWithPaintingResponse> = emptyList()
-    private var lastSearchQuery: String? = null // Переменная для хранения последнего запроса
+    private var lastSearchQuery: String? = null
+
+    private val HISTORY_KEY = "search_history"
+    private val MAX_HISTORY_ITEMS = 10
+    private val handler = Handler(Looper.getMainLooper())
+    private val searchRunnable = Runnable {
+        lastSearchQuery?.let { query ->
+            viewModel.setSearchQuery(query)
+            performSearch(query)
+        }
+    }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -43,13 +62,14 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        searchHistoryPreferences = requireContext().getSharedPreferences("search_history", Context.MODE_PRIVATE)
         exhibitionService = RetrofitClient.createService(ExhibitionService::class.java)
         viewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
 
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Инициализация адаптера
         adapter = ExhibitionAdapter(emptyList()) { exhibition ->
+            addToSearchHistory(exhibition.title)
             val bundle = Bundle().apply {
                 putParcelable("exhibition", exhibition)
             }
@@ -57,10 +77,10 @@ class HomeFragment : Fragment() {
         }
         binding.recyclerView.adapter = adapter
 
-        // Загружаем выставки
+        setupSearchSuggestionsAdapter()
+
         loadExhibitions()
 
-        // Настраиваем BottomNavigationView
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_account -> {
@@ -75,44 +95,37 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Настройка SearchView
         setupSearchView()
 
-        // Восстановление текста поискового запроса
         viewModel.searchQuery.observe(viewLifecycleOwner) { query ->
             binding.searchView.setQuery(query, false)
-            filterExhibitions(query) // Фильтруем список при восстановлении текста
+            filterExhibitions(query)
         }
 
-        // Обработка нажатия на кнопку "Обновить" в плейсхолдере с ошибкой
         binding.retryButton.setOnClickListener {
-            lastSearchQuery?.let { query ->
-                filterExhibitions(query) // Повторно отправляем последний запрос
-            }
+            lastSearchQuery?.let { query -> performSearch(query) }
         }
 
-        // Обработка нажатия на кнопку "Обновить" в плейсхолдере для пустого результата
         binding.retrySearchButton.setOnClickListener {
-            lastSearchQuery?.let { query ->
-                filterExhibitions(query) // Повторно отправляем последний запрос
-            }
+            lastSearchQuery?.let { query -> performSearch(query) }
         }
 
-        // Загружаем данные пользователя для определения роли
+        binding.clearHistoryButton.setOnClickListener {
+            clearSearchHistory()
+        }
+
         val token = sharedPreferences.getString("jwtToken", null)
         val userId = sharedPreferences.getInt("userId", -1)
 
         if (token != null && userId != -1) {
             viewModel.loadUser(token, userId)
         } else {
-            Log.e("HomeFragment", "Token or User ID not found in SharedPreferences")
+            Log.e("HomeFragment", "Token or User ID not found")
             Toast.makeText(requireContext(), "Token or User ID not found", Toast.LENGTH_SHORT).show()
         }
 
-        // Подписка на изменения данных пользователя
         viewModel.user.observe(viewLifecycleOwner) { user ->
             if (user != null) {
-                // Управление видимостью кнопки создания выставки в зависимости от роли
                 binding.bottomNavigationView.menu.findItem(R.id.navigation_create_exhibition).isVisible =
                     user.role == "ORGANIZER"
             } else {
@@ -122,19 +135,103 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupSearchSuggestionsAdapter() {
+        val from = arrayOf("suggestion")
+        val to = intArrayOf(android.R.id.text1)
+
+        suggestionsAdapter = SimpleCursorAdapter(
+            requireContext(),
+            android.R.layout.simple_list_item_1,
+            null,
+            from,
+            to,
+            CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        )
+
+        binding.searchView.suggestionsAdapter = suggestionsAdapter
+    }
+
+    private fun createSuggestionsCursor(suggestions: List<String>): Cursor {
+        val matrixCursor = MatrixCursor(arrayOf("_id", "suggestion"))
+        suggestions.forEachIndexed { index, suggestion ->
+            matrixCursor.addRow(arrayOf(index, suggestion))
+        }
+        return matrixCursor
+    }
+
+    private fun showSearchHistory() {
+        val history = getSearchHistory()
+        if (history.isNotEmpty()) {
+            binding.clearHistoryButton.visibility = View.VISIBLE
+            suggestionsAdapter.changeCursor(createSuggestionsCursor(history))
+        } else {
+            binding.clearHistoryButton.visibility = View.GONE
+            suggestionsAdapter.changeCursor(null)
+        }
+    }
+
+    private fun addToSearchHistory(query: String) {
+        if (query.isBlank()) return
+
+        val history = getSearchHistory().toMutableList()
+        history.removeAll { it.equals(query, ignoreCase = true) }
+        history.add(0, query)
+
+        if (history.size > MAX_HISTORY_ITEMS) {
+            history.subList(MAX_HISTORY_ITEMS, history.size).clear()
+        }
+
+        searchHistoryPreferences.edit()
+            .putStringSet(HISTORY_KEY, history.toSet())
+            .apply()
+
+        showSearchHistory()
+    }
+
+    private fun getSearchHistory(): List<String> {
+        return searchHistoryPreferences.getStringSet(HISTORY_KEY, emptySet())?.toList() ?: emptyList()
+    }
+
+    private fun clearSearchHistory() {
+        searchHistoryPreferences.edit()
+            .remove(HISTORY_KEY)
+            .apply()
+        suggestionsAdapter.changeCursor(null)
+        binding.clearHistoryButton.visibility = View.GONE
+    }
+
     private fun setupSearchView() {
         val searchView = binding.searchView
 
-        // 1. Подсказка в пустом поле
         searchView.queryHint = "Поиск по названию выставки"
-
-        // 2. Показ клавиатуры при нажатии на поле ввода
         searchView.isIconified = false
         searchView.requestFocus()
 
-        // 3. Отображение кнопки "Очистить" при вводе текста
+        searchView.setOnSearchClickListener {
+            showSearchHistory()
+        }
+
+        searchView.setOnSuggestionListener(object : SearchView.OnSuggestionListener {
+            override fun onSuggestionSelect(position: Int): Boolean = false
+
+            override fun onSuggestionClick(position: Int): Boolean {
+                suggestionsAdapter.cursor?.let { cursor ->
+                    if (cursor.moveToPosition(position)) {
+                        val suggestion = cursor.getString(cursor.getColumnIndexOrThrow("suggestion"))
+                        searchView.setQuery(suggestion, true)
+                    }
+                }
+                return true
+            }
+        })
+
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let {
+                    addToSearchHistory(it)
+                    viewModel.setSearchQuery(it)
+                    performSearch(it)
+                }
                 return true
             }
 
@@ -145,7 +242,6 @@ class HomeFragment : Fragment() {
             }
         })
 
-        // 4. Очистка текста и скрытие клавиатуры при нажатии на кнопку "Очистить"
         searchView.setOnCloseListener {
             searchView.setQuery("", false)
             searchView.clearFocus()
@@ -156,23 +252,25 @@ class HomeFragment : Fragment() {
     }
 
     private fun filterExhibitions(query: String?) {
-        lastSearchQuery = query // Сохраняем последний запрос
-        val filteredExhibitions = if (query.isNullOrEmpty()) {
-            allExhibitions
-        } else {
-            allExhibitions.filter { exhibition ->
-                exhibition.title.contains(query, ignoreCase = true)
-            }
-        }
+        lastSearchQuery = query
+        handler.removeCallbacks(searchRunnable)
 
-        if (filteredExhibitions.isEmpty()) {
-            // Показываем плейсхолдер с кнопкой "Обновить", если нет результатов
-            showNoResultsPlaceholder()
-        } else {
-            // Скрываем плейсхолдер и показываем список
-            hidePlaceholders()
-            adapter.updateData(filteredExhibitions)
+        when {
+            query.isNullOrEmpty() -> {
+                adapter.updateData(allExhibitions)
+                hidePlaceholders()
+            }
+            else -> handler.postDelayed(searchRunnable, 2000)
         }
+    }
+
+    private fun performSearch(query: String) {
+        val filtered = allExhibitions.filter {
+            it.title.contains(query, ignoreCase = true)
+        }
+        adapter.updateData(filtered)
+        if (filtered.isEmpty()) showNoResultsPlaceholder()
+        else hidePlaceholders()
     }
 
     private fun loadExhibitions() {
@@ -180,33 +278,31 @@ class HomeFragment : Fragment() {
             try {
                 val token = getTokenFromSharedPreferences()
                 if (token.isEmpty()) {
-                    Log.e("HomeFragment", "Токен отсутствует!")
-                    Toast.makeText(context, "Ошибка: Токен не найден", Toast.LENGTH_SHORT).show()
+                    showError("Токен отсутствует!")
                     return@launch
                 }
 
                 val response = exhibitionService.getExhibitions("Bearer $token")
 
                 if (response.isSuccessful) {
-                    val exhibitions = response.body()
-                    if (exhibitions != null) {
-                        allExhibitions = exhibitions
-                        adapter.updateData(exhibitions)
-                        hidePlaceholders() // Скрываем плейсхолдеры, если данные загружены
+                    response.body()?.let {
+                        allExhibitions = it
+                        adapter.updateData(it)
+                        hidePlaceholders()
                     }
                 } else {
-                    // Показываем плейсхолдер с ошибкой
-                    showErrorPlaceholder()
-                    Log.e("HomeFragment", "Ошибка загрузки: ${response.message()}")
-                    Toast.makeText(context, "Ошибка загрузки: ${response.message()}", Toast.LENGTH_SHORT).show()
+                    showError("Ошибка загрузки: ${response.message()}")
                 }
             } catch (e: Exception) {
-                // Показываем плейсхолдер с ошибкой
-                showErrorPlaceholder()
-                Log.e("HomeFragment", "Ошибка сети: ${e.message}", e)
-                Toast.makeText(context, "Ошибка сети: ${e.message}", Toast.LENGTH_SHORT).show()
+                showError("Ошибка сети: ${e.message}")
             }
         }
+    }
+
+    private fun showError(message: String) {
+        Log.e("HomeFragment", message)
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        showErrorPlaceholder()
     }
 
     private fun showNoResultsPlaceholder() {
@@ -232,7 +328,8 @@ class HomeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        handler.removeCallbacks(searchRunnable)
         _binding = null
+        super.onDestroyView()
     }
 }
