@@ -10,8 +10,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.cursoradapter.widget.CursorAdapter
+import androidx.cursoradapter.widget.SimpleCursorAdapter
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -20,10 +21,11 @@ import com.example.exhibitionapp.databinding.FragmentHomeBinding
 import com.example.exhibitionapp.services.ExhibitionService
 import com.example.exhibitionapp.viewmodel.HomeViewModel
 import androidx.appcompat.widget.SearchView
-import androidx.cursoradapter.widget.CursorAdapter
-import androidx.cursoradapter.widget.SimpleCursorAdapter
 import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeFragment : Fragment() {
 
@@ -40,8 +42,6 @@ class HomeFragment : Fragment() {
 
     private val HISTORY_KEY = "search_history"
     private val MAX_HISTORY_ITEMS = 10
-
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -98,15 +98,18 @@ class HomeFragment : Fragment() {
         // Восстановление текста поискового запроса
         viewModel.searchQuery.observe(viewLifecycleOwner) { query ->
             binding.searchView.setQuery(query, false)
+            showSearchProgress()
             filterExhibitions(query)
         }
 
         // Обработка кнопок
         binding.retryButton.setOnClickListener {
+            showSearchProgress()
             lastSearchQuery?.let { query -> filterExhibitions(query) }
         }
 
         binding.retrySearchButton.setOnClickListener {
+            showSearchProgress()
             lastSearchQuery?.let { query -> filterExhibitions(query) }
         }
 
@@ -231,6 +234,7 @@ class HomeFragment : Fragment() {
                 query?.let {
                     addToSearchHistory(it)
                     viewModel.setSearchQuery(it)
+                    showSearchProgress()
                     filterExhibitions(it)
                 }
                 return true
@@ -238,6 +242,7 @@ class HomeFragment : Fragment() {
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 newText?.let { viewModel.setSearchQuery(it) }
+                showSearchProgress()
                 filterExhibitions(newText)
                 return true
             }
@@ -247,6 +252,7 @@ class HomeFragment : Fragment() {
             searchView.setQuery("", false)
             searchView.clearFocus()
             viewModel.setSearchQuery("")
+            hideSearchProgress()
             filterExhibitions("")
             true
         }
@@ -254,21 +260,39 @@ class HomeFragment : Fragment() {
 
     private fun filterExhibitions(query: String?) {
         lastSearchQuery = query
-        val filteredExhibitions = if (query.isNullOrEmpty()) {
-            allExhibitions
-        } else {
-            allExhibitions.filter { it.title.contains(query, ignoreCase = true) }
-        }
+        showSearchProgress()
 
-        if (filteredExhibitions.isEmpty()) {
-            showNoResultsPlaceholder()
-        } else {
-            hidePlaceholders()
-            adapter.updateData(filteredExhibitions)
+        val startTime = System.currentTimeMillis()
+
+        lifecycleScope.launch {
+            val filteredExhibitions = if (query.isNullOrEmpty()) {
+                allExhibitions
+            } else {
+                allExhibitions.filter { it.title.contains(query, ignoreCase = true) }
+            }
+
+            // Вычисляем оставшееся время до 2 секунд
+            val elapsed = System.currentTimeMillis() - startTime
+            val remainingDelay = maxOf(0, 2000 - elapsed)
+
+            delay(remainingDelay)
+
+            withContext(Dispatchers.Main) {
+                hideSearchProgress()
+
+                if (filteredExhibitions.isEmpty()) {
+                    showNoResultsPlaceholder()
+                } else {
+                    hidePlaceholders()
+                    adapter.updateData(filteredExhibitions)
+                }
+            }
         }
     }
 
     private fun loadExhibitions() {
+        showSearchProgress()
+
         lifecycleScope.launch {
             try {
                 val token = getTokenFromSharedPreferences()
@@ -279,19 +303,34 @@ class HomeFragment : Fragment() {
 
                 val response = exhibitionService.getExhibitions("Bearer $token")
 
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        allExhibitions = it
-                        adapter.updateData(it)
-                        hidePlaceholders()
+                withContext(Dispatchers.Main) {
+                    hideSearchProgress()
+
+                    if (response.isSuccessful) {
+                        response.body()?.let {
+                            allExhibitions = it
+                            adapter.updateData(it)
+                            hidePlaceholders()
+                        }
+                    } else {
+                        showError("Ошибка загрузки: ${response.message()}")
                     }
-                } else {
-                    showError("Ошибка загрузки: ${response.message()}")
                 }
             } catch (e: Exception) {
-                showError("Ошибка сети: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    hideSearchProgress()
+                    showError("Ошибка сети: ${e.message}")
+                }
             }
         }
+    }
+
+    private fun showSearchProgress() {
+        binding.searchProgressBar.visibility = View.VISIBLE
+    }
+
+    private fun hideSearchProgress() {
+        binding.searchProgressBar.visibility = View.GONE
     }
 
     private fun showError(message: String) {

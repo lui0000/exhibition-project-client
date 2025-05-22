@@ -3,9 +3,9 @@ package com.example.exhibitionapp.services
 import com.example.exhibitionapp.dataclass.ExhibitionRequest
 import com.example.exhibitionapp.dataclass.ExhibitionResponse
 import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpStatus
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -19,5 +19,8 @@ interface ExhibitionService {
     suspend fun getExhibition(@Path("id") id: Int): Response<ExhibitionResponse>
 
     @POST("exhibition/add")
-    suspend fun createExhibition(@Body request: ExhibitionRequest): Response<ExhibitionResponse>
+    suspend fun createExhibition(
+        @Header("Authorization") token: String,
+        @Body request: ExhibitionRequest
+    ): Response<Void>
 }

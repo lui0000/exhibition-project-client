@@ -32,6 +32,17 @@
             app:searchHintIcon="@null"
             app:closeIcon="@drawable/ic_clear"/>
 
+        <!-- ProgressBar для отображения загрузки -->
+        <ProgressBar
+            android:id="@+id/searchProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginHorizontal="16dp"
+            android:indeterminate="true"
+            android:visibility="gone"
+            android:progressTint="@color/light_grey" />
+
         <!-- Кнопка очистки истории поиска -->
         <Button
             android:id="@+id/clearHistoryButton"

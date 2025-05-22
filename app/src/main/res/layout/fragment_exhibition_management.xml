@@ -60,45 +60,37 @@
                     android:background="@drawable/border"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Поле для даты выставки -->
+            <!-- Дата начала выставки -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/exhibition_date"
-                    android:hint="Дата выставки"
+                    android:id="@+id/start_date_input"
+                    android:hint="Дата начала"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="date"
-                    android:background="@drawable/border"/>
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:background="@drawable/border" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Поле для загрузки изображения -->
-            <LinearLayout
+            <!-- Дата окончания выставки -->
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="16dp">
+                android:layout_height="wrap_content">
 
-                <ImageView
-                    android:id="@+id/exhibition_image"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_add"
-                android:contentDescription="Exhibition Image"/>
-
-                <Button
-                    android:id="@+id/btn_upload_image"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/end_date_input"
+                    android:hint="Дата окончания"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="16dp"
-                    android:text="Загрузить изображение"
-                    android:textColor="@color/dark_gray"
-                    android:backgroundTint="@color/light_grey"/>
-            </LinearLayout>
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:background="@drawable/border" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+
 
             <ProgressBar
                 android:id="@+id/progressBar"
