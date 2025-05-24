@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,10 +14,19 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.exhibitionapp.databinding.FragmentAppForInvestorsBinding
+import com.example.exhibitionapp.dataclass.ExhibitionResponse
 import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
+import com.example.exhibitionapp.dataclass.InvestmentExhibitionRequest
+import com.example.exhibitionapp.dataclass.InvestmentRequest
 import com.example.exhibitionapp.services.ExhibitionService
+import com.example.exhibitionapp.services.InvestmentService
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.net.URLEncoder
+import android.util.Base64
+import retrofit2.Response
 import retrofit2.HttpException
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 class AppForInvestorsFragment : Fragment() {
@@ -26,11 +36,13 @@ class AppForInvestorsFragment : Fragment() {
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var exhibitionService: ExhibitionService
+    private lateinit var investmentService: InvestmentService
+
+    private var exhibitionList: List<ExhibitionWithPaintingResponse> = emptyList()
+    private var selectedExhibitionFull: ExhibitionResponse? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentAppForInvestorsBinding.inflate(inflater, container, false)
         return binding.root
@@ -42,15 +54,28 @@ class AppForInvestorsFragment : Fragment() {
 
         sharedPreferences = requireContext()
             .getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        // Используем ваш RetrofitClient
+
         exhibitionService = RetrofitClient.createService(ExhibitionService::class.java)
+        investmentService = RetrofitClient.createService(InvestmentService::class.java)
 
         setupDropdownBehavior()
         loadExhibitionTitles()
+
+        binding.btnInvest.setOnClickListener {
+            val amount = binding.investmentAmount.text.toString().trim()
+            if (selectedExhibitionFull == null) {
+                Toast.makeText(requireContext(), "Выберите выставку", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (amount.isEmpty()) {
+                Toast.makeText(requireContext(), "Введите сумму инвестиции", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            sendInvestment(amount)
+        }
     }
 
     private fun setupDropdownBehavior() {
-        // чтобы при клике сразу выпадал список
         binding.exhibitionSpinner.apply {
             threshold = 0
             isFocusable = false
@@ -67,19 +92,17 @@ class AppForInvestorsFragment : Fragment() {
             return
         }
 
-        // Показываем ProgressBar
         binding.progressBar.visibility = View.VISIBLE
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = exhibitionService.getExhibitions("Bearer $token")
-                if (response.isSuccessful) {
-                    // Получаем тело ответа
-                    val body: List<ExhibitionWithPaintingResponse> = response.body() ?: emptyList()
-                    // Извлекаем только названия
-                    val titles = body.map { it.title }
+                val response: Response<List<ExhibitionWithPaintingResponse>> =
+                    exhibitionService.getExhibitions("Bearer $token")
 
-                    // Создаем адаптер и вешаем на AutoCompleteTextView
+                if (response.isSuccessful) {
+                    exhibitionList = response.body().orEmpty()
+                    val titles = exhibitionList.map { it.title }
+
                     val adapter = ArrayAdapter(
                         requireContext(),
                         android.R.layout.simple_dropdown_item_1line,
@@ -87,16 +110,11 @@ class AppForInvestorsFragment : Fragment() {
                     )
                     binding.exhibitionSpinner.setAdapter(adapter)
 
-                    // Обработка выбора
-                    binding.exhibitionSpinner.setOnItemClickListener { parent, _, position, _ ->
-                        val selectedTitle = parent.getItemAtPosition(position) as String
-                        Toast.makeText(
-                            requireContext(),
-                            "Вы выбрали: $selectedTitle",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    binding.exhibitionSpinner.setOnItemClickListener { parent, _, pos, _ ->
+                        val title = parent.getItemAtPosition(pos) as String
+                        Toast.makeText(requireContext(), "Вы выбрали: $title", Toast.LENGTH_SHORT).show()
+                        loadFullExhibitionByTitle(title, token)
                     }
-
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -119,6 +137,68 @@ class AppForInvestorsFragment : Fragment() {
                 e.printStackTrace()
             } finally {
                 binding.progressBar.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun loadFullExhibitionByTitle(title: String, rawToken: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val encoded = URLEncoder.encode(title, "UTF-8")
+                val resp: Response<ExhibitionResponse> =
+                    exhibitionService.getExhibitionByTitle("Bearer $rawToken", encoded)
+
+                if (resp.isSuccessful) {
+                    selectedExhibitionFull = resp.body()
+                    Log.d("AppForInvestors", "Loaded full exhibition: $selectedExhibitionFull")
+                } else {
+                    Toast.makeText(requireContext(), "Не удалось получить выставку", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun sendInvestment(amount: String) {
+        val token = sharedPreferences.getString("jwtToken", null)
+        if (token.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Токен не найден", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // ← HERE: read userId exactly as your other fragment does
+        val userId = sharedPreferences.getInt("userId", -1)
+        if (userId == -1) {
+            Toast.makeText(requireContext(), "ID пользователя не найден", Toast.LENGTH_SHORT).show()
+            Log.e("AppForInvestors", "userId missing in SharedPrefs")
+            return
+        }
+
+        val ex = selectedExhibitionFull!!
+        val request = InvestmentRequest(
+            exhibition = InvestmentExhibitionRequest(
+                id = ex.id,
+                title = ex.title,
+                description = ex.description,
+                startDate = ex.startDate,
+                endDate = ex.endDate
+            ),
+            amount = amount,
+            investorId = userId
+        )
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val resp = investmentService.createInvestment("Bearer $token", request)
+                if (resp.isSuccessful) {
+                    Toast.makeText(requireContext(), "Инвестиция отправлена", Toast.LENGTH_SHORT).show()
+                } else {
+                    val err = resp.errorBody()?.string().orEmpty()
+                    Toast.makeText(requireContext(), "Ошибка при отправке: $err", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
             }
         }
     }

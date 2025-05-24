@@ -23,4 +23,11 @@ interface ExhibitionService {
         @Header("Authorization") token: String,
         @Body request: ExhibitionRequest
     ): Response<Void>
+
+    @GET("exhibition/by-title/{title}")
+    suspend fun getExhibitionByTitle(
+        @Header("Authorization") token: String,
+        @Path("title") title: String
+    ): Response<ExhibitionResponse>
+
 }
