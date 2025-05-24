@@ -21,12 +21,8 @@ import com.example.exhibitionapp.dataclass.InvestmentRequest
 import com.example.exhibitionapp.services.ExhibitionService
 import com.example.exhibitionapp.services.InvestmentService
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import java.net.URLEncoder
-import android.util.Base64
-import retrofit2.Response
 import retrofit2.HttpException
-
+import retrofit2.Response
 
 @RequiresApi(Build.VERSION_CODES.O)
 class AppForInvestorsFragment : Fragment() {
@@ -38,11 +34,14 @@ class AppForInvestorsFragment : Fragment() {
     private lateinit var exhibitionService: ExhibitionService
     private lateinit var investmentService: InvestmentService
 
+    // full list so we can pull out id/title/etc.
     private var exhibitionList: List<ExhibitionWithPaintingResponse> = emptyList()
     private var selectedExhibitionFull: ExhibitionResponse? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         _binding = FragmentAppForInvestorsBinding.inflate(inflater, container, false)
         return binding.root
@@ -76,6 +75,7 @@ class AppForInvestorsFragment : Fragment() {
     }
 
     private fun setupDropdownBehavior() {
+        // make AutoCompleteTextView drop down on click
         binding.exhibitionSpinner.apply {
             threshold = 0
             isFocusable = false
@@ -111,9 +111,15 @@ class AppForInvestorsFragment : Fragment() {
                     binding.exhibitionSpinner.setAdapter(adapter)
 
                     binding.exhibitionSpinner.setOnItemClickListener { parent, _, pos, _ ->
-                        val title = parent.getItemAtPosition(pos) as String
-                        Toast.makeText(requireContext(), "Вы выбрали: $title", Toast.LENGTH_SHORT).show()
-                        loadFullExhibitionByTitle(title, token)
+                        // grab the raw title and id
+                        val selected = exhibitionList[pos]
+                        Toast.makeText(
+                            requireContext(),
+                            "Вы выбрали: ${selected.title}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        // load full by ID or by-title; here we keep by-title but pass raw
+                        loadFullExhibitionByTitle(selected.title, token)
                     }
                 } else {
                     Toast.makeText(
@@ -142,20 +148,31 @@ class AppForInvestorsFragment : Fragment() {
     }
 
     private fun loadFullExhibitionByTitle(title: String, rawToken: String) {
+        // **NO** URLEncoder.encode(…) here—pass `title` raw
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val encoded = URLEncoder.encode(title, "UTF-8")
                 val resp: Response<ExhibitionResponse> =
-                    exhibitionService.getExhibitionByTitle("Bearer $rawToken", encoded)
+                    exhibitionService.getExhibitionByTitle("Bearer $rawToken", title)
 
                 if (resp.isSuccessful) {
                     selectedExhibitionFull = resp.body()
                     Log.d("AppForInvestors", "Loaded full exhibition: $selectedExhibitionFull")
                 } else {
-                    Toast.makeText(requireContext(), "Не удалось получить выставку", Toast.LENGTH_SHORT).show()
+                    val err = resp.errorBody()?.string().orEmpty()
+                    Toast.makeText(
+                        requireContext(),
+                        "Не удалось получить выставку: $err",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    Log.e("AppForInvestors", "by-title failed: $err")
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка: ${e.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                Log.e("AppForInvestors", "Exception loading by-title", e)
             }
         }
     }
@@ -167,7 +184,6 @@ class AppForInvestorsFragment : Fragment() {
             return
         }
 
-        // ← HERE: read userId exactly as your other fragment does
         val userId = sharedPreferences.getInt("userId", -1)
         if (userId == -1) {
             Toast.makeText(requireContext(), "ID пользователя не найден", Toast.LENGTH_SHORT).show()
@@ -195,10 +211,18 @@ class AppForInvestorsFragment : Fragment() {
                     Toast.makeText(requireContext(), "Инвестиция отправлена", Toast.LENGTH_SHORT).show()
                 } else {
                     val err = resp.errorBody()?.string().orEmpty()
-                    Toast.makeText(requireContext(), "Ошибка при отправке: $err", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Ошибка при отправке: $err",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка: ${e.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
