@@ -2,6 +2,7 @@ package com.example.exhibitionapp.services
 
 import com.example.exhibitionapp.dataclass.ExhibitionRequest
 import com.example.exhibitionapp.dataclass.ExhibitionResponse
+import com.example.exhibitionapp.dataclass.ExhibitionWithAdditionalInfoDto
 import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpStatus
 import retrofit2.Response
@@ -29,5 +30,11 @@ interface ExhibitionService {
         @Header("Authorization") token: String,
         @Path("title") title: String
     ): Response<ExhibitionResponse>
+
+    @GET("exhibition/details/{title}")
+    suspend fun getExhibitionDetails(
+        @Header("Authorization") token: String,
+        @Path("title") title: String
+    ): Response<ExhibitionWithAdditionalInfoDto>
 
 }

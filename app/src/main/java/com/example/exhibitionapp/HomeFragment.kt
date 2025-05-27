@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.database.Cursor
 import android.database.MatrixCursor
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -11,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.cursoradapter.widget.CursorAdapter
 import androidx.cursoradapter.widget.SimpleCursorAdapter
 import androidx.lifecycle.ViewModelProvider
@@ -51,6 +53,7 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -61,14 +64,16 @@ class HomeFragment : Fragment() {
 
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Инициализация адаптера для выставок
+
         adapter = ExhibitionAdapter(emptyList()) { exhibition ->
             addToSearchHistory(exhibition.title)
+
             val bundle = Bundle().apply {
-                putParcelable("exhibition", exhibition)
+                putString("exhibition_title", exhibition.title)
             }
             findNavController().navigate(R.id.action_homeFragment_to_exhibitionsFragment, bundle)
         }
+
         binding.recyclerView.adapter = adapter
 
         // Инициализация адаптера для подсказок поиска
