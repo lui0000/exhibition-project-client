@@ -59,8 +59,6 @@
                         android:orientation="vertical"
                         android:padding="24dp">
 
-                        <!-- … ваши TextInputEditText для имени и суммы … -->
-
                         <!-- Exposed Dropdown Menu для выбора выставки -->
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/exhibitionDropdownLayout"
@@ -78,9 +76,9 @@
                                 android:id="@+id/exhibitionSpinner"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="none"
                                 android:focusable="false"
-                                android:importantForAutofill="no"/>
+                                android:importantForAutofill="no"
+                                android:inputType="none" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <ProgressBar
