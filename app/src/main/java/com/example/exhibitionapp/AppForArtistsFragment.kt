@@ -21,6 +21,7 @@ import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
 import com.example.exhibitionapp.dataclass.ExhibitionResponse
 import com.example.exhibitionapp.services.ExhibitionService
 import com.example.exhibitionapp.services.PaintingService
+import com.example.exhibitionapp.services.UserService
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import retrofit2.Response
@@ -34,6 +35,7 @@ class AppForArtistsFragment : Fragment() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var exhibitionService: ExhibitionService
     private lateinit var paintingService: PaintingService
+    private lateinit var userService: UserService
 
     private var exhibitionList: List<ExhibitionWithPaintingResponse> = emptyList()
     private var selectedExhibition: ExhibitionResponse? = null
@@ -58,6 +60,7 @@ class AppForArtistsFragment : Fragment() {
             .getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         exhibitionService = RetrofitClient.createService(ExhibitionService::class.java)
         paintingService   = RetrofitClient.createService(PaintingService::class.java)
+        userService       = RetrofitClient.createService(UserService::class.java)
 
         setupDropdownBehavior()
         loadExhibitionTitles()
@@ -192,10 +195,10 @@ class AppForArtistsFragment : Fragment() {
         }
 
         val userId = sharedPreferences.getInt("userId", -1)
-        Log.d(TAG, "UserId from prefs: $userId")
+        Log.d(TAG, "User ID: $userId")
         if (userId == -1) {
             Toast.makeText(requireContext(), "ID пользователя не найден", Toast.LENGTH_SHORT).show()
-            Log.e(TAG, "UserId missing in prefs")
+            Log.e(TAG, "User ID missing in SharedPreferences")
             return
         }
 
@@ -207,7 +210,6 @@ class AppForArtistsFragment : Fragment() {
             return
         }
 
-        // Read form fields
         val style       = binding.artistStyle.text.toString().trim().ifEmpty { null }
         val title       = binding.artistPaintingTitle.text.toString().trim()
         val description = binding.artistPaintingDescription.text.toString().trim().ifEmpty { null }
@@ -220,25 +222,38 @@ class AppForArtistsFragment : Fragment() {
             return
         }
 
-        val request = PaintingRequest(
-            title       = title,
-            style       = style,
-            description = description,
-            photoData   = photoUrl,
-            artist      = ArtistRequest(userId = userId),
-            exhibition  = ExhibitionInPaintingRequest(
-                id          = ex.id,
-                title       = ex.title,
-                description = ex.description,
-                startDate   = ex.startDate,
-                endDate     = ex.endDate
-            )
-        )
-        Log.d(TAG, "PaintingRequest: $request")
-
         binding.progressBar.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                val userData = userService.getUserInfo("Bearer $token", userId)
+                Log.d(TAG, "getUserInfo() completed successfully")
+
+                if (userData == null) {
+                    Log.e(TAG, "User data is null")
+                    Toast.makeText(requireContext(), "Данные пользователя недоступны", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val request = PaintingRequest(
+                    title       = title,
+                    style       = style,
+                    description = description,
+                    photoData   = photoUrl,
+                    artist      = ArtistRequest(
+                        name = userData.name,
+                        email = userData.email,
+                        role = "ARTIST"
+                    ),
+                    exhibition  = ExhibitionInPaintingRequest(
+                        id = ex.id,
+                        title = ex.title,
+                        description = ex.description,
+                        startDate = ex.startDate,
+                        endDate = ex.endDate
+                    )
+                )
+                Log.d(TAG, "PaintingRequest: $request")
+
                 val resp = paintingService.createPainting("Bearer $token", request)
                 Log.d(TAG, "createPainting() returned code=${resp.code()}")
                 if (resp.isSuccessful) {

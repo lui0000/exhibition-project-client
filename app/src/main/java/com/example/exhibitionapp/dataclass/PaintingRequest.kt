@@ -3,10 +3,10 @@ package com.example.exhibitionapp.dataclass
 import com.google.gson.annotations.SerializedName
 
 data class ArtistRequest(
-    val userId: Int
+    val name: String,
+    val email: String,
+    val role: String = "ARTIST"
 )
-
-
 
 data class ExhibitionInPaintingRequest(
     val id: Int,
@@ -15,8 +15,6 @@ data class ExhibitionInPaintingRequest(
     @SerializedName("startDate") val startDate: String,
     @SerializedName("endDate")   val endDate:   String
 )
-
-
 
 data class PaintingRequest(
     val title: String,
