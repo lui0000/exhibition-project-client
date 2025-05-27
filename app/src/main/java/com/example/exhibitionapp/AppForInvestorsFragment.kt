@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.exhibitionapp.databinding.FragmentAppForInvestorsBinding
 import com.example.exhibitionapp.dataclass.ExhibitionResponse
 import com.example.exhibitionapp.dataclass.ExhibitionWithPaintingResponse
@@ -56,6 +57,11 @@ class AppForInvestorsFragment : Fragment() {
 
         exhibitionService = RetrofitClient.createService(ExhibitionService::class.java)
         investmentService = RetrofitClient.createService(InvestmentService::class.java)
+
+
+        binding.btnBack.setOnClickListener {
+            findNavController().navigate(R.id.action_appForInvestorsFragment2_to_accountFragment)
+        }
 
         setupDropdownBehavior()
         loadExhibitionTitles()

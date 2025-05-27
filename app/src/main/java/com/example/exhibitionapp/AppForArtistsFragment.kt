@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.exhibitionapp.databinding.FragmentAppForArtistsBinding
 import com.example.exhibitionapp.dataclass.ArtistRequest
 import com.example.exhibitionapp.dataclass.ExhibitionInPaintingRequest
@@ -55,6 +56,11 @@ class AppForArtistsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // ИСПРАВЛЕНО: используем правильный action для AppForArtistsFragment
+        binding.btnBack.setOnClickListener {
+            findNavController().navigate(R.id.action_appForArtistsFragment_to_accountFragment)
+        }
+
         Log.d(TAG, "onViewCreated()")
         sharedPreferences = requireContext()
             .getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
@@ -70,6 +76,7 @@ class AppForArtistsFragment : Fragment() {
             submitPainting()
         }
     }
+
 
     private fun setupDropdownBehavior() {
         Log.d(TAG, "setupDropdownBehavior()")

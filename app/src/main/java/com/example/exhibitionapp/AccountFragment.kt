@@ -37,7 +37,14 @@ class AccountFragment : Fragment() {
 
         viewModel = ViewModelProvider(this)[AccountViewModel::class.java]
         sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+
+        // Обработчик кнопки "Назад"
+        binding.btnBack.setOnClickListener {
+            findNavController().navigate(R.id.action_accountFragment_to_homeFragment)
+        }
+
         val token = sharedPreferences.getString("jwtToken", null)
+
 
         if (token != null) {
             val userId = sharedPreferences.getInt("userId", -1)
@@ -53,14 +60,12 @@ class AccountFragment : Fragment() {
             Toast.makeText(requireContext(), "Token not found", Toast.LENGTH_SHORT).show()
         }
 
-        // Подписка на изменения данных пользователя
         viewModel.user.observe(viewLifecycleOwner) { user ->
             if (user != null) {
                 binding.userName.text = user.name
                 binding.userEmail.text = user.email
                 binding.userRole.text = "Роль: ${user.role}"
 
-                // Управление видимостью кнопок в зависимости от роли
                 when (user.role) {
                     "ARTIST" -> {
                         binding.btnApplyExhibition.visibility = View.VISIBLE
@@ -71,7 +76,6 @@ class AccountFragment : Fragment() {
                         binding.btnInvestProject.visibility = View.VISIBLE
                     }
                     else -> {
-                        // Для организатора и других ролей скрываем обе кнопки
                         binding.btnApplyExhibition.visibility = View.GONE
                         binding.btnInvestProject.visibility = View.GONE
                     }
@@ -100,13 +104,10 @@ class AccountFragment : Fragment() {
             }
         }
 
-        // Обработчик для кнопки выхода
         binding.logoutButton.setOnClickListener {
             logout()
         }
 
-
-        // Настройка переключателя темной темы
         val themeSwitch = binding.themeSwitch
         val settingsPrefs = requireContext().getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
         val isDarkMode = settingsPrefs.getBoolean("dark_mode", false)
@@ -121,20 +122,26 @@ class AccountFragment : Fragment() {
             }
             AppCompatDelegate.setDefaultNightMode(mode)
 
-            // Сохраняем состояние темы
             settingsPrefs.edit().putBoolean("dark_mode", isChecked).apply()
+        }
+
+        binding.btnApplyExhibition.setOnClickListener {
+            try {
+                findNavController().navigate(R.id.action_accountFragment_to_appForArtistsFragment)
+            } catch (e: Exception) {
+                Log.e("AccountFragment", "Navigation error: ${e.message}")
+                Toast.makeText(requireContext(), "Navigation error", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun logout() {
-        // Очищаем SharedPreferences
         sharedPreferences.edit().apply {
             remove("jwtToken")
             remove("userId")
             apply()
         }
 
-        // Перенаправляем на экран логина
         try {
             findNavController().navigate(R.id.action_accountFragment_to_loginFragment)
         } catch (e: Exception) {
@@ -142,7 +149,6 @@ class AccountFragment : Fragment() {
             Toast.makeText(requireContext(), "Navigation error", Toast.LENGTH_SHORT).show()
         }
 
-        // Уведомляем пользователя
         Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
     }
 

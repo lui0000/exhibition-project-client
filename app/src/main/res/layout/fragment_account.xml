@@ -7,13 +7,27 @@
     android:padding="16dp"
     android:background="@android:color/white">
 
+    <!-- Кнопка "Назад" -->
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_arrow_back"
+        android:contentDescription="Назад"
+        android:padding="12dp" />
+
     <!-- Profile Photo -->
     <ImageView
         android:id="@+id/profile_photo"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="32dp"
+        android:layout_below="@id/btn_back"
+        android:layout_marginTop="16dp"
         android:src="@drawable/ic_action_name"/>
 
     <!-- User Name -->
@@ -80,8 +94,6 @@
         android:textAlignment="center"
         android:backgroundTint="@color/light_grey"/>
 
-    <!-- Logout Button -->
-
     <Switch
         android:id="@+id/theme_switch"
         android:layout_width="wrap_content"
@@ -91,6 +103,7 @@
         android:text="@string/dark_theme"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
+    <!-- Logout Button -->
     <Button
         android:id="@+id/logout_button"
         android:layout_width="wrap_content"

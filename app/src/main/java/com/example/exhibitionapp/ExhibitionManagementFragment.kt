@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.exhibitionapp.databinding.FragmentExhibitionManagementBinding
 import com.example.exhibitionapp.dataclass.ExhibitionRequest
 import com.example.exhibitionapp.dataclass.OrganizerRequest
@@ -45,6 +46,10 @@ class ExhibitionManagementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.btnBack.setOnClickListener {
+            findNavController().navigate(R.id.action_exhibitionManagementFragment_to_homeFragment)
+        }
+
         sharedPreferences = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         exhibitionService = RetrofitClient.createService(ExhibitionService::class.java)
 
@@ -53,6 +58,7 @@ class ExhibitionManagementFragment : Fragment() {
                 binding.startDateInput.setText(dateString)
             }
         }
+
         binding.endDateInput.setOnClickListener {
             showDatePicker { dateString ->
                 binding.endDateInput.setText(dateString)

@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -50,9 +51,15 @@ class ExhibitionsFragment : Fragment() {
         return binding.root
     }
 
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Добавляем обработчик для кнопки "Назад"
+        binding.btnBack.setOnClickListener {
+            findNavController().navigate(R.id.action_exhibitionsFragment_to_homeFragment2)
+        }
 
         Log.d(TAG, "Arguments received: $arguments")
         exhibitionTitle = arguments?.getString(ARG_EXHIBITION_TITLE)
