@@ -11,7 +11,7 @@
     tools:context=".RegistrationFragment">
 
     <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
+        android:layout_width="380dp"
         android:layout_height="wrap_content"
         android:layout_margin="30dp"
         app:cardCornerRadius="30dp"
@@ -20,7 +20,7 @@
 
         <LinearLayout
             android:id="@+id/linearLayout"
-            android:layout_width="match_parent"
+            android:layout_width="380dp"
             android:layout_height="600dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/border"
@@ -30,10 +30,10 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Registration"
+                android:text="@string/register"
                 android:textAlignment="center"
                 android:textColor="@color/dark_gray"
-                android:textSize="36sp"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -44,7 +44,7 @@
                     android:id="@+id/user_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="full name" />
+                    android:hint="полное имя" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -55,7 +55,7 @@
                     android:id="@+id/email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="email" />
+                    android:hint="почта" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -66,7 +66,7 @@
                     android:id="@+id/password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="password"
+                    android:hint="пароль"
                     android:inputType="textPassword"/>
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -83,19 +83,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="Register as a ORGANIZER" />
+                android:text="организатор" />
 
             <RadioButton
                 android:id="@+id/artist_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Register as ARTIST" />
+                android:text="художник" />
 
             <RadioButton
                 android:id="@+id/inv_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Register as INVESTOR" />
+                android:text="инвестор" />
 
             <Button
                 android:id="@+id/btn_register"
@@ -103,7 +103,7 @@
                 android:layout_height="60dp"
                 android:layout_marginTop="30dp"
                 android:backgroundTint="@color/dark_gray"
-                android:text="registration"
+                android:text="@string/register"
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="18sp"
@@ -115,7 +115,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:backgroundTint="@color/light_grey"
-                android:text="already have an account"
+                android:text="уже есть аккаунт"
                 android:textAlignment="center"
                 android:textColor="@color/dark_gray"
                 android:textSize="18sp"
